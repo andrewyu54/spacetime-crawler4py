@@ -4,12 +4,70 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import hashlib
 
+
+# code copied from https://topic.alibabacloud.com/a/implementation-of-simhash-algorithm-in-python_1_34_33046577.html
+class Simhash(object):
+    def __init__(self, tokens, hashbits=128):
+        self.hashbits = hashbits
+        self.tokens = tokens
+        self.fingerprint = self.simhash()
+
+    def _string_hash(self, source):
+        if source == "":
+            return 0
+        else:
+            x = ord(source[0]) << 7
+            m = 1000003
+            mask = 2 ** self.hashbits - 1
+            for c in source:
+                x = ((x * m) ^ ord(c)) & mask
+            x ^= len(source)
+            if x == -1:
+                x = -2
+            return x
+
+    def simhash(self):
+        v = [0] * self.hashbits
+        for t in self.tokens:
+            h = self._string_hash(t)
+            for i in range(self.hashbits):
+                bitmask = 1 << i
+                if h & bitmask:
+                    v[i] += 1
+                else:
+                    v[i] -= 1
+        fingerprint = 0
+        for i in range(self.hashbits):
+            if v[i] >= 0:
+                fingerprint |= 1 << i
+        return fingerprint
+
+    def hamming_distance(self, other_hash):
+        x = self.fingerprint ^ other_hash.fingerprint
+        tot = 0
+        while x:
+            tot += 1
+            x &= x - 1
+        return tot
+
+    def __str__(self):
+        return str(self.fingerprint)
+
+
+
+seen_urls = set()
+
 def scraper(url, resp):
+    if url in seen_urls:
+        return list()
+    seen_urls.add(url)
     links = extract_next_links(url, resp)
-    return [link for link in links]
+    return [link for link in links if is_valid(link)]
 
 
-seen_checksums = set()
+
+simhashes = set()
+
 
 def extract_next_links(url, resp):
     #
@@ -25,31 +83,36 @@ def extract_next_links(url, resp):
 
     if resp.status != 200:
         return list()
-    
-    if not resp.raw_response or not resp.raw_response.content:
-        return list()
-    
+
 
     content_type = resp.raw_response.headers.get('content-type', '').lower()
-    
+  
     if 'text/html' not in content_type:
         return list()
+    
 
     try:
         content = resp.raw_response.content
-
-
-        checksum = hashlib.md5(content).hexdigest()
-        if checksum in seen_checksums:
-            print(f'Duplicate page detected: {url}')
-            return list()
-        else:
-            seen_checksums.add(checksum)
         
         
         soup = BeautifulSoup(content, 'html.parser')
         links = soup.find_all('a')
         valids = []
+
+
+        # simhash operation
+        text = soup.get_text(separator = ' ').lower()
+        text = re.sub(r'[^a-z0-9\s]', ' ', text)
+
+        tokens = text.split()
+        simhash = Simhash(tokens)
+
+        for otherhash in simhashes:
+            if simhash.hamming_distance(otherhash) <  5:
+                simhashes.add(simhash)
+                return list()
+        simhashes.add(simhash)
+
 
 
         for link in links:
@@ -64,13 +127,14 @@ def extract_next_links(url, resp):
             absolute_url = urljoin(resp.url, href)
             absolute_url = absolute_url.split('#')[0].rstrip('/')
 
-            if absolute_url and is_valid(absolute_url):
+            if is_valid(absolute_url):
                 valids.append(absolute_url)
 
         return valids
 
 
     except Exception as e:
+        print('EXCEPTION OCCURRED\n\n')
         return list()
 
 
@@ -83,42 +147,37 @@ def is_valid(url):
 
     try:
         parsed = urlparse(url)
-        if parsed.scheme not in set(["http", "https"]):
+        if parsed.scheme not in set(['http', 'https']):
             return False
         
 
         allowed = [
-                "ics.uci.edu",
-                "cs.uci.edu",
-                "informatics.uci.edu",
-                "stat.uci.edu",
+                'ics.uci.edu',
+                'cs.uci.edu',
+                'informatics.uci.edu',
+                'stat.uci.edu',
         ]
-        domain = parsed.netloc.lower()
+        domain = parsed.netloc.lower().split(':')[0]
         
-        if ':' in domain:
-            domain = domain.split(':')[0]
-        
-        if domain not in allowed:
+        if not any(domain == a or domain.endswith('.' + a) for a in allowed):
             return False
         
 
-        url_lower = url.lower()
-        trap_patterns = [
-            "?do=", "?idx=", "&do=", "&idx=", "?action=", "&action=",
-            "?submit=", "&submit=", "?reply=", "&reply="
-        ]
-
-        if any(pattern in url_lower for pattern in trap_patterns):
-            return False
 
 
-        path_lower = parsed.path.lower()
+        path = parsed.path.lower()
         restricted_paths = [
-            "calendar", "login", "logout", "signup", "register", 
-            "ticket", "display.html", "wp-admin", "admin", "cgi-bin",
-            "archive", "download", "attachment"
+            'calendar', 'event', 'events'
         ]
-        if any(restricted in path_lower for restricted in restricted_paths):
+        if any(restricted in path for restricted in restricted_paths):
+            return False
+        
+
+        query = parsed.query.lower()
+        blocked_params = [
+            'do=', 'tab_', 'image=', 'idx='
+        ]
+        if any(param in query for param in blocked_params):
             return False
         
 
@@ -134,5 +193,5 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
-        print ("TypeError for ", parsed)
+        print ('TypeError for ', parsed)
         raise
