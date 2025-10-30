@@ -109,7 +109,7 @@ def extract_next_links(url, resp):
 
         for otherhash in simhashes:
             if simhash.hamming_distance(otherhash) <  5:
-                simhashes.add(simhash)
+                print('NEAR DUPLICATE DETECTED!!!\n')
                 return list()
         simhashes.add(simhash)
 
@@ -167,7 +167,7 @@ def is_valid(url):
 
         path = parsed.path.lower()
         restricted_paths = [
-            'calendar', 'event', 'events'
+            'calendar', 'event', 'events', 'commit', 'pix', 'tags', 'tree'
         ]
         if any(restricted in path for restricted in restricted_paths):
             return False
@@ -175,7 +175,9 @@ def is_valid(url):
 
         query = parsed.query.lower()
         blocked_params = [
-            'do=', 'tab_', 'image=', 'idx='
+            'do=', 'tab_', 'image=', 'idx=', 'C=', 'O=', 'action=',
+            'controller=', 'commit=', 'view=', 'from=', 'precision=',
+            'p=', 'page_id='
         ]
         if any(param in query for param in blocked_params):
             return False
