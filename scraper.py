@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 import hashlib
 
 
-# code copied from https://topic.alibabacloud.com/a/implementation-of-simhash-algorithm-in-python_1_34_33046577.html
+# code from https://topic.alibabacloud.com/a/implementation-of-simhash-algorithm-in-python_1_34_33046577.html
 class Simhash(object):
     def __init__(self, tokens, hashbits=128):
         self.hashbits = hashbits
@@ -167,7 +167,7 @@ def is_valid(url):
 
         path = parsed.path.lower()
         restricted_paths = [
-            'calendar', 'event', 'events', 'commit', 'pix', 'tags', 'tree'
+            'calendar', 'event', 'events', 'commit', 'pix', 'tags', 'tree', 'doku.php'
         ]
         if any(restricted in path for restricted in restricted_paths):
             return False
@@ -177,7 +177,7 @@ def is_valid(url):
         blocked_params = [
             'do=', 'tab_', 'image=', 'idx=', 'C=', 'O=', 'action=',
             'controller=', 'commit=', 'view=', 'from=', 'precision=',
-            'p=', 'page_id='
+            'p=', 'page_id=', 'share=', 'redirect_to='
         ]
         if any(param in query for param in blocked_params):
             return False
