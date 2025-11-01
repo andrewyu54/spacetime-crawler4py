@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urldefrag
 import hashlib
 
 
@@ -125,7 +125,8 @@ def extract_next_links(url, resp):
                 continue
 
             absolute_url = urljoin(resp.url, href)
-            absolute_url = absolute_url.split('#')[0].rstrip('/')
+            absolute_url = urldefrag(absolute_url)[0]
+            absolute_url = absolute_url.rstrip('/')
 
             if is_valid(absolute_url):
                 valids.append(absolute_url)
@@ -151,6 +152,7 @@ def is_valid(url):
             return False
         
 
+# ADD . IN FRONT OF ALL OF THESE ?????
         allowed = [
                 'ics.uci.edu',
                 'cs.uci.edu',
