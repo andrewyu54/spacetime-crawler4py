@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urldefrag
 import hashlib
 
+from deliv import counter
+
 
 # code from https://topic.alibabacloud.com/a/implementation-of-simhash-algorithm-in-python_1_34_33046577.html
 class Simhash(object):
@@ -61,6 +63,7 @@ seen_urls = set()
 def scraper(url, resp):
     if url in seen_urls:
         return list()
+    counter.addUrl(url, resp)
     seen_urls.add(url)
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]

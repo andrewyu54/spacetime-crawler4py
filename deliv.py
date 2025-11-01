@@ -68,3 +68,4 @@ class Counter:
         return wordlist[:50]
     
         
+counter = Counter()
