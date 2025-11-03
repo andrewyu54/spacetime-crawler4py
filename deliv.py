@@ -19,16 +19,19 @@ class Counter:
     def checkUrlIn(self, url: str) -> bool:
         # scheme, netloc, path, query, fragment
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         return (clean_url in self._url_list)
     
     @staticmethod
     def cleanUrl(url: str) -> str:
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         return clean_url
     
     def _updatePageWordNumber(self, url, resp) -> int:
+        if resp.raw_response is None:
+            return 0
+        
         soup = BeautifulSoup(resp.raw_response.content, "html.parser")
         text = soup.get_text(separator=' ').lower()
         tokenlist = re.sub(r'[^a-z0-9\s]', ' ', text).split()
@@ -45,7 +48,7 @@ class Counter:
     
     def addUrl(self, url: str, resp):
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         self._url_list.add(clean_url)
         
         num = self._updatePageWordNumber(clean_url, resp)

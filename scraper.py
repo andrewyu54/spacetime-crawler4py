@@ -113,7 +113,7 @@ def extract_next_links(url, resp):
 
         for otherhash in simhashes:
             if simhash.hamming_distance(otherhash) <  5:
-                print('NEAR DUPLICATE DETECTED!!!\n')
+                print('NEAR DUPLICATE DETECTED!!!')
                 return list()
         simhashes.add(simhash)
 
@@ -156,7 +156,6 @@ def is_valid(url):
             return False
         
 
-# ADD . IN FRONT OF ALL OF THESE ?????
         allowed = [
                 'ics.uci.edu',
                 'cs.uci.edu',
