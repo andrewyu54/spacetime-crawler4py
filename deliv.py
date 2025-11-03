@@ -23,25 +23,17 @@ class Counter:
     def checkUrlIn(self, url: str) -> bool:
         # scheme, netloc, path, query, fragment
         parts = urlsplit(url)
-<<<<<<< HEAD
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
-        return (clean_url in self._url_list)
-=======
         clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
         with self._lock:
             return (clean_url in self._url_list)
->>>>>>> origin/Cody-branch
     
     @staticmethod
     def cleanUrl(url: str) -> str:
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
         return clean_url
     
     def _updatePageWordNumber(self, url, resp) -> int:
-        if resp.raw_response is None:
-            return 0
-        
         soup = BeautifulSoup(resp.raw_response.content, "html.parser")
         text = soup.get_text(separator=' ').lower()
         tokenlist = re.sub(r'[^a-z0-9\s]', ' ', text).split()
@@ -58,12 +50,7 @@ class Counter:
     
     def addUrl(self, url: str, resp):
         parts = urlsplit(url)
-<<<<<<< HEAD
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
-        self._url_list.add(clean_url)
-=======
         clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
->>>>>>> origin/Cody-branch
         
         with self._lock:
             if clean_url in self._url_list:
