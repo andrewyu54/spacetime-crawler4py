@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from urllib.parse import urlsplit, urlunsplit
 import re
+from threading import Lock
 
 STOPWORDS = {"a","about","above","after","again","against","all","am","an","and","any","are","aren't","as","at","be","because","been","before","being","below","between","both","but","by","can't","cannot","could","couldn't","did","didn't","do","does","doesn't","doing","don't","down","during","each","few","for","from","further","had","hadn't","has","hasn't","have","haven't","having","he","he'd","he'll","he's","her","here","here's","hers","herself","him","himself","his","how","how's","i","i'd","i'll","i'm","i've","if","in","into","is","isn't","it","it's","its","itself","let's","me","more","most","mustn't","my","myself","no","nor","not","of","off","on","once","only","or","other","ought","our","ours","ourselves","out","over","own","same","shan't","she","she'd","she'll","she's","should","shouldn't","so","some","such","than","that","that's","the","their","theirs","them","themselves","then","there","there's","these","they","they'd","they'll","they're","they've","this","those","through","to","too","under","until","up","very","was","wasn't","we","we'd","we'll","we're","we've","were","weren't","what","what's","when","when's","where","where's","which","while","who","who's","whom","why","why's","with","won't","would","wouldn't","you","you'd","you'll","you're","you've","your","yours","yourself","yourselves"}
 
@@ -15,12 +16,21 @@ class Counter:
         
         self._longest = (-1, "")    # (number, url)
         
+        # Thread safety lock
+        self._lock = Lock()
+        
     
     def checkUrlIn(self, url: str) -> bool:
         # scheme, netloc, path, query, fragment
         parts = urlsplit(url)
+<<<<<<< HEAD
         clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         return (clean_url in self._url_list)
+=======
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
+        with self._lock:
+            return (clean_url in self._url_list)
+>>>>>>> origin/Cody-branch
     
     @staticmethod
     def cleanUrl(url: str) -> str:
@@ -48,27 +58,38 @@ class Counter:
     
     def addUrl(self, url: str, resp):
         parts = urlsplit(url)
+<<<<<<< HEAD
         clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         self._url_list.add(clean_url)
+=======
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query))
+>>>>>>> origin/Cody-branch
         
-        num = self._updatePageWordNumber(clean_url, resp)
-        
-        # check .uci.edu
-        if parts.netloc[-8:] == ".uci.edu":
-            self._under_uci += 1
-            self._url_page_count[clean_url] = self._url_page_count.get(clean_url, 0) + 1
-        
-        # update longest
-        if num > self._longest[0]:
-            self._longest = (num, url)
+        with self._lock:
+            if clean_url in self._url_list:
+                return
+            self._url_list.add(clean_url)
+            
+            num = self._updatePageWordNumber(clean_url, resp)
+            
+            # check .uci.edu
+            if parts.netloc[-8:] == ".uci.edu":
+                self._under_uci += 1
+                self._url_page_count[clean_url] = self._url_page_count.get(clean_url, 0) + 1
+            
+            # update longest
+            if num > self._longest[0]:
+                self._longest = (num, url)
             
     def getLongest(self):
-        return self._longest
+        with self._lock:
+            return self._longest
     
     def getRank50(self):
-        wordlist = [(x, y) for x, y in self._word_count]
-        wordlist.sort(key= lambda x:x[0], reverse=True)
-        return wordlist[:50]
+        with self._lock:
+            wordlist = [(x, y) for x, y in self._word_count.items()]
+            wordlist.sort(key=lambda x: x[1], reverse=True)
+            return wordlist[:50]
     
         
 counter = Counter()
