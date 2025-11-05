@@ -65,8 +65,14 @@ def scraper(url, resp):
         return list()
     if resp.status != 200:
         return list()
+    if resp.raw_response is None:
+        return list()
     if resp.raw_response.content is None:
-            return list()
+        return list()
+    content_type = resp.raw_response.headers.get('content-type', '').lower()
+    if 'text/html' not in content_type:
+        return list()
+    
     counter.addUrl(url, resp)
     seen_urls.add(url)
     links = extract_next_links(url, resp)
