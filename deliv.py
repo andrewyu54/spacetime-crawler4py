@@ -66,7 +66,7 @@ class Counter:
             # check .uci.edu
             if parts.netloc.endswith(".uci.edu"):
                 self._under_uci += 1
-                domain = parts.netloc
+                domain = parts.netloc.split(':')[0]
                 self._url_page_count[domain] = self._url_page_count.get(domain, 0) + 1
             
             # update longest
