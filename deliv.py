@@ -64,9 +64,10 @@ class Counter:
             num = self._updatePageWordNumber(clean_url, resp)
             
             # check .uci.edu
-            if parts.netloc[-8:] == ".uci.edu":
+            if parts.netloc.endswith(".uci.edu"):
                 self._under_uci += 1
-                self._url_page_count[clean_url] = self._url_page_count.get(clean_url, 0) + 1
+                domain = parts.netloc
+                self._url_page_count[domain] = self._url_page_count.get(domain, 0) + 1
             
             # update longest
             if num > self._longest[0]:
