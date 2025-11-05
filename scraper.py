@@ -65,6 +65,8 @@ def scraper(url, resp):
         return list()
     if resp.status != 200:
         return list()
+    if resp.raw_response.content is None:
+            return list()
     counter.addUrl(url, resp)
     seen_urls.add(url)
     links = extract_next_links(url, resp)
@@ -98,7 +100,6 @@ def extract_next_links(url, resp):
 
     try:
         content = resp.raw_response.content
-        
         
         soup = BeautifulSoup(content, 'html.parser')
         links = soup.find_all('a')
@@ -140,7 +141,7 @@ def extract_next_links(url, resp):
 
 
     except Exception as e:
-        print('EXCEPTION OCCURRED\n\n')
+        print('EXCEPTION OCCURRED\n')
         return list()
 
 
