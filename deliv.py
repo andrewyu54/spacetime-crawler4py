@@ -37,7 +37,10 @@ class Counter:
         # added this to handle empty response
         if resp.raw_response is None:
             return 0
-        
+
+        if resp.raw_response.content is None:
+            return 0
+
         soup = BeautifulSoup(resp.raw_response.content, "html.parser")
         text = soup.get_text(separator=' ').lower()
         tokenlist = re.sub(r'[^a-z0-9\s]', ' ', text).split()
