@@ -23,14 +23,14 @@ class Counter:
     def checkUrlIn(self, url: str) -> bool:
         # scheme, netloc, path, query, fragment
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, parts.fragment))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         with self._lock:
             return (clean_url in self._url_list)
     
     @staticmethod
     def cleanUrl(url: str) -> str:
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, parts.fragment))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         return clean_url
     
     def _updatePageWordNumber(self, url, resp) -> int:
@@ -54,7 +54,7 @@ class Counter:
     
     def addUrl(self, url: str, resp):
         parts = urlsplit(url)
-        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, parts.fragment))
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ''))
         
         with self._lock:
             if clean_url in self._url_list:
